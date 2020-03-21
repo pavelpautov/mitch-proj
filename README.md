@@ -31,4 +31,5 @@ You need to run batch file 'As Admin'. After the batch is successfully executed,
 
 You could copy docx files in 'source' directory and check what happens.
 
-See demo video ...(don't forget to add a link there)
+See demo video 
+[https://drive.google.com/file/d/1UsmnqgsYXleT1Y9X-gNhgPPjySkoYsCT/view?usp=sharing](https://drive.google.com/file/d/1UsmnqgsYXleT1Y9X-gNhgPPjySkoYsCT/view?usp=sharing)
