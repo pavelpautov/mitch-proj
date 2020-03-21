@@ -32,7 +32,7 @@
 
             if (!File.Exists(destination))
             {
-                WriteToFile($"{DateTime.Now}  Detected file: {Path.GetFileName(e.FullPath)} - event:{e.ChangeType}");
+                WriteToLogFile($"{DateTime.Now}  Detected file: {Path.GetFileName(e.FullPath)} - event:{e.ChangeType}");
                 
                 try
                 {
@@ -41,7 +41,7 @@
                 }
                 catch (Exception ex)
                 {
-                    WriteToFile($"exception: {ex} + inner: {ex.InnerException}");
+                    WriteToLogFile($"exception: {ex} + inner: {ex.InnerException}");
                 }
             }
         }
@@ -63,7 +63,7 @@
                     File.Delete(path);
                     return;
                 }
-                catch (IOException ioEx)
+                catch (IOException ioEx) // There could be exception if file still in use by Word
                 {
                     Thread.Sleep(3000);
                     attempts--;
@@ -74,10 +74,10 @@
 
         protected override void OnStop()
         {
-            WriteToFile("Service is stopped at " + DateTime.Now);
+            WriteToLogFile("Service is stopped at " + DateTime.Now);
         }
 
-        public static void WriteToFile(string Message)
+        public static void WriteToLogFile(string Message)
         {
             string path = AppDomain.CurrentDomain.BaseDirectory + "\\Logs";
             if (!Directory.Exists(path))
