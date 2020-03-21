@@ -1,40 +1,83 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
-
-namespace DocxToPdfService
+﻿namespace DocxToPdfService
 {
+    using System;
+    using System.IO;
+    using System.ServiceProcess;
+    using System.Threading;
+
     public partial class Service1 : ServiceBase
     {
-        Timer timer = new Timer(); 
+        public const string DocxFolderPath = @"C:\Pavel\UpWork\Util-for-convert-docx-to-pdf\DocxFolder";
+        public const string PdfForderPath  = @"C:\Pavel\UpWork\Util-for-convert-docx-to-pdf\PdfFolder";
+
         public Service1()
         {
             InitializeComponent();
         }
+
         protected override void OnStart(string[] args)
         {
-            WriteToFile("Service is started at " + DateTime.Now);
-            timer.Elapsed += new ElapsedEventHandler(OnElapsedTime);
-            timer.Interval = 5000;
-            timer.Enabled = true;
+            FileSystemWatcher watcher = new FileSystemWatcher();
+            watcher.Path = DocxFolderPath;
+            watcher.NotifyFilter = NotifyFilters.LastWrite;
+            watcher.Filter = "*.docx";
+            watcher.Changed += new FileSystemEventHandler(OnChanged);
+            watcher.EnableRaisingEvents = true;
         }
+
+        private static void OnChanged(object sender, FileSystemEventArgs e)
+        {
+            string source = e.FullPath;
+            string destination = GeneratePathForDestinationFile(e.FullPath);
+
+            if (!File.Exists(destination))
+            {
+                WriteToFile($"{DateTime.Now}  Detected file: {Path.GetFileName(e.FullPath)} - event:{e.ChangeType}");
+                
+                try
+                {
+                    DocxToPdfService.Convert(source, destination);
+                    DeleteFile(source);
+                }
+                catch (Exception ex)
+                {
+                    WriteToFile($"exception: {ex} + inner: {ex.InnerException}");
+                }
+            }
+        }
+
+        private static string GeneratePathForDestinationFile(string sourceFilePath)
+        {
+            return Path.Combine(
+                PdfForderPath,
+                Path.GetFileNameWithoutExtension(sourceFilePath) + ".pdf");
+        }
+
+        private static void DeleteFile(string path)
+        {
+            int attempts = 10;
+            while (true)
+            {
+                try
+                {
+                    File.Delete(path);
+                    return;
+                }
+                catch (IOException ioEx)
+                {
+                    Thread.Sleep(3000);
+                    attempts--;
+                    if (attempts < 1) return;
+                }
+            }
+        }
+
         protected override void OnStop()
         {
             WriteToFile("Service is stopped at " + DateTime.Now);
         }
-        private void OnElapsedTime(object source, ElapsedEventArgs e)
-        {
-            WriteToFile("Service is recall at " + DateTime.Now);
-        }
-        public void WriteToFile(string Message)
+
+        public static void WriteToFile(string Message)
         {
             string path = AppDomain.CurrentDomain.BaseDirectory + "\\Logs";
             if (!Directory.Exists(path))

@@ -1,3 +1,4 @@
+rem  You need to run this script under "as Admin" privilegies
 @echo OFF
 echo Stopping old service version...
 net stop "DocxToPdf"
